@@ -1,0 +1,85 @@
+{
+  "entities": {
+    "ListItem": {
+      "title": "ListItem",
+      "description": "An item in a packing or shopping list",
+      "type": "object",
+      "properties": {
+        "text": { "type": "string", "maxLength": 200 },
+        "checked": { "type": "boolean" },
+        "category": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["text", "checked", "category"]
+    },
+    "BudgetItem": {
+      "title": "BudgetItem",
+      "description": "An expense item",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "maxLength": 200 },
+        "category": { "type": "string", "maxLength": 50 },
+        "amount": { "type": "number", "minimum": 0 }
+      },
+      "required": ["name", "category", "amount"]
+    },
+    "FoodItem": {
+      "title": "FoodItem",
+      "description": "A food item to try",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "maxLength": 100 },
+        "price": { "type": "string", "maxLength": 50 },
+        "checked": { "type": "boolean" }
+      },
+      "required": ["name", "price", "checked"]
+    },
+    "DocumentItem": {
+      "title": "DocumentItem",
+      "description": "A travel document",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 50 },
+        "name": { "type": "string", "maxLength": 100 },
+        "type": { "type": "string", "enum": ["passport", "ticket", "hotel", "other"] },
+        "url": { "type": "string", "maxLength": 1000000 },
+        "subtext": { "type": "string", "maxLength": 200 }
+      },
+      "required": ["id", "name", "type"]
+    },
+    "TripSettings": {
+      "title": "TripSettings",
+      "description": "General settings for the trip",
+      "type": "object",
+      "properties": {
+        "totalBudget": { "type": "number", "minimum": 0 }
+      },
+      "required": ["totalBudget"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/packingList/{itemId}": {
+      "schema": { "$ref": "#/entities/ListItem" },
+      "description": "User's packing list items"
+    },
+    "/users/{userId}/shoppingList/{itemId}": {
+      "schema": { "$ref": "#/entities/ListItem" },
+      "description": "User's shopping list items"
+    },
+    "/users/{userId}/budgetItems/{itemId}": {
+      "schema": { "$ref": "#/entities/BudgetItem" },
+      "description": "User's budget items"
+    },
+    "/users/{userId}/foodItems/{itemId}": {
+      "schema": { "$ref": "#/entities/FoodItem" },
+      "description": "User's food items"
+    },
+    "/users/{userId}/documents/{itemId}": {
+      "schema": { "$ref": "#/entities/DocumentItem" },
+      "description": "User's documents"
+    },
+    "/users/{userId}/settings/trip": {
+      "schema": { "$ref": "#/entities/TripSettings" },
+      "description": "User's trip settings"
+    }
+  }
+}

@@ -1,0 +1,112 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function hasOnlyAllowedFields(allowedFields) {
+      return request.resource.data.keys().hasOnly(allowedFields);
+    }
+    
+    function hasRequiredFields(requiredFields) {
+      return request.resource.data.keys().hasAll(requiredFields);
+    }
+    
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+    function isValidListItem() {
+      let data = request.resource.data;
+      return hasOnlyAllowedFields(['id', 'text', 'checked', 'category']) &&
+             hasRequiredFields(['id', 'text', 'checked', 'category']) &&
+             data.id is string && data.id.size() > 0 && data.id.size() <= 50 &&
+             data.text is string && data.text.size() > 0 && data.text.size() <= 200 &&
+             data.checked is bool &&
+             data.category is string && data.category.size() > 0 && data.category.size() <= 50;
+    }
+    
+    function isValidBudgetItem() {
+      let data = request.resource.data;
+      return hasOnlyAllowedFields(['id', 'name', 'category', 'amount']) &&
+             hasRequiredFields(['id', 'name', 'category', 'amount']) &&
+             data.id is string && data.id.size() > 0 && data.id.size() <= 50 &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 200 &&
+             data.category is string && data.category.size() > 0 && data.category.size() <= 50 &&
+             data.amount is number && data.amount >= 0;
+    }
+    
+    function isValidFoodItem() {
+      let data = request.resource.data;
+      return hasOnlyAllowedFields(['id', 'name', 'price', 'checked']) &&
+             hasRequiredFields(['id', 'name', 'price', 'checked']) &&
+             data.id is string && data.id.size() > 0 && data.id.size() <= 50 &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.price is string && data.price.size() <= 50 &&
+             data.checked is bool;
+    }
+    
+    function isValidDocumentItem() {
+      let data = request.resource.data;
+      return hasOnlyAllowedFields(['id', 'name', 'type', 'url', 'subtext']) &&
+             hasRequiredFields(['id', 'name', 'type']) &&
+             data.id is string && data.id.size() > 0 && data.id.size() <= 50 &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.type in ['passport', 'ticket', 'hotel', 'other'] &&
+             (!('url' in data) || (data.url is string && data.url.size() <= 1000000)) &&
+             (!('subtext' in data) || (data.subtext is string && data.subtext.size() <= 200));
+    }
+    
+    function isValidTripSettings() {
+      let data = request.resource.data;
+      return hasOnlyAllowedFields(['totalBudget', 'visibleWidgets']) &&
+             hasRequiredFields(['totalBudget', 'visibleWidgets']) &&
+             data.totalBudget is number && data.totalBudget >= 0 &&
+             data.visibleWidgets is map;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+    match /users/{userId} {
+      
+      match /packingList/{itemId} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidListItem();
+      }
+      
+      match /shoppingList/{itemId} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidListItem();
+      }
+      
+      match /budgetItems/{itemId} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidBudgetItem();
+      }
+      
+      match /foodItems/{itemId} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidFoodItem();
+      }
+      
+      match /documents/{itemId} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidDocumentItem();
+      }
+      
+      match /settings/trip {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidTripSettings();
+      }
+    }
+  }
+}
